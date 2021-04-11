@@ -1,6 +1,8 @@
 package com.github.komarovd95.widgetstore.application;
 
 import com.github.komarovd95.widgetstore.api.*;
+import com.github.komarovd95.widgetstore.api.common.Point2D;
+import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -271,16 +273,41 @@ public class InMemoryWidgetsStorageSpringTest {
         WidgetView widget2 = creationResponse2.getBody();
         Assertions.assertNotNull(widget2);
 
-        ResponseEntity<WidgetsListView> response = testRestTemplate.getForEntity(
+        ResponseEntity<WidgetView> creationResponse3 = testRestTemplate.postForEntity(
             "/api/widgets",
-            WidgetsListView.class
+            creationRequest,
+            WidgetView.class
         );
-        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-        WidgetsListView widgets = response.getBody();
-        Assertions.assertNotNull(widgets);
-        Assertions.assertEquals(2, widgets.getWidgets().size());
-        assertWidget(widget1, widgets.getWidgets().get(0));
-        assertWidget(widget2, widgets.getWidgets().get(1));
+        Assertions.assertEquals(HttpStatus.OK, creationResponse3.getStatusCode());
+        WidgetView widget3 = creationResponse3.getBody();
+        Assertions.assertNotNull(widget3);
+
+        ResponseEntity<WidgetsListView> firstPageResponse = testRestTemplate.getForEntity(
+            "/api/widgets?limit={limit}",
+            WidgetsListView.class,
+            2
+        );
+        Assertions.assertEquals(HttpStatus.OK, firstPageResponse.getStatusCode());
+        WidgetsListView firstPageWidgets = firstPageResponse.getBody();
+        Assertions.assertNotNull(firstPageWidgets);
+        Assertions.assertEquals(2, firstPageWidgets.getWidgets().size());
+        assertWidget(widget1, firstPageWidgets.getWidgets().get(0));
+        assertWidget(widget2, firstPageWidgets.getWidgets().get(1));
+        Assertions.assertTrue(firstPageWidgets.getPaging().getHasMore());
+
+        ResponseEntity<WidgetsListView> secondPageResponse = testRestTemplate.getForEntity(
+            "/api/widgets?limit={limit}&cursor={cursor}",
+            WidgetsListView.class,
+            2,
+            firstPageWidgets.getPaging().getCursor()
+                .orElseGet(() -> Assertions.fail("Cursor expected from the first page"))
+        );
+        Assertions.assertEquals(HttpStatus.OK, secondPageResponse.getStatusCode());
+        WidgetsListView secondPageWidgets = secondPageResponse.getBody();
+        Assertions.assertNotNull(secondPageWidgets);
+        Assertions.assertEquals(1, secondPageWidgets.getWidgets().size());
+        assertWidget(widget3, secondPageWidgets.getWidgets().get(0));
+        Assertions.assertFalse(secondPageWidgets.getPaging().getHasMore());
     }
 
     private static void assertWidget(WidgetView expected, WidgetView actual) {

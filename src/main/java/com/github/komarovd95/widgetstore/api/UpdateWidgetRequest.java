@@ -1,6 +1,9 @@
 package com.github.komarovd95.widgetstore.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.komarovd95.widgetstore.api.common.Point2D;
+import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.validation.Valid;
@@ -30,7 +33,11 @@ public class UpdateWidgetRequest {
     private final WidgetDimensions dimensions;
 
     @JsonCreator
-    public UpdateWidgetRequest(Point2D coordinates, Integer zIndex, WidgetDimensions dimensions) {
+    public UpdateWidgetRequest(
+        @JsonProperty("coordinates") Point2D coordinates,
+        @JsonProperty("zIndex") Integer zIndex,
+        @JsonProperty("dimensions") WidgetDimensions dimensions
+    ) {
         this.coordinates = coordinates;
         this.zIndex = zIndex;
         this.dimensions = dimensions;

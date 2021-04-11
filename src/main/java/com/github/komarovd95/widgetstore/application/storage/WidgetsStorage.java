@@ -1,6 +1,8 @@
 package com.github.komarovd95.widgetstore.application.storage;
 
+import com.github.komarovd95.widgetstore.application.domain.PagedList;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
+import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
 
 import java.util.List;
 import java.util.Optional;
@@ -76,8 +78,11 @@ public interface WidgetsStorage {
      * Returns a list of all widgets. The widgets in the resulting list MUST be sorted by Z-index in ascending order.
      * <p>
      * The implementation of this method MUST be thread-safe.
+     * <p>
+     * The implementation supports pagination.
      *
-     * @return a list of all widgets
+     * @param filter a parameters that used for filtering widgets
+     * @return a paged list of all widgets
      */
-    List<Widget> getWidgets();
+    PagedList<Widget> getWidgets(WidgetsFilter filter);
 }

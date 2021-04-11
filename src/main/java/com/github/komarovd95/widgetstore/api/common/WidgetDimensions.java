@@ -1,6 +1,7 @@
-package com.github.komarovd95.widgetstore.api;
+package com.github.komarovd95.widgetstore.api.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.validation.constraints.NotNull;
@@ -30,7 +31,7 @@ public class WidgetDimensions {
     private final Integer height;
 
     @JsonCreator
-    private WidgetDimensions(Integer width, Integer height) {
+    private WidgetDimensions(@JsonProperty("width") Integer width, @JsonProperty("height") Integer height) {
         this.width = width;
         this.height = height;
     }

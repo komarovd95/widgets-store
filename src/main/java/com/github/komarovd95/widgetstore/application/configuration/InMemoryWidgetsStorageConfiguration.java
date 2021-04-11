@@ -29,7 +29,8 @@ public class InMemoryWidgetsStorageConfiguration {
         return new InMemoryWidgetsStorage(
             widgetIdGenerator,
             clock,
-            inMemoryWidgetsStorageProperties.getLockAcquisitionTimeout()
+            inMemoryWidgetsStorageProperties.getLockAcquisitionTimeout(),
+            inMemoryWidgetsStorageProperties.getMaxVersionsToStore()
         );
     }
 }

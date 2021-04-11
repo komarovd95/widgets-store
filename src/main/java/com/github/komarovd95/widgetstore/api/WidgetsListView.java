@@ -1,8 +1,11 @@
 package com.github.komarovd95.widgetstore.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.komarovd95.widgetstore.api.common.Paging;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import liquibase.pro.packaged.J;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,9 +25,16 @@ public class WidgetsListView {
     )
     private final List<WidgetView> widgets;
 
+    @Schema(description = "A metadata for paging", required = true)
+    private final Paging paging;
+
     @JsonCreator
-    public WidgetsListView(List<WidgetView> widgets) {
+    public WidgetsListView(
+        @JsonProperty("widgets") List<WidgetView> widgets,
+        @JsonProperty("paging") Paging paging
+    ) {
         this.widgets = Collections.unmodifiableList(Objects.requireNonNull(widgets, "widgets"));
+        this.paging = Objects.requireNonNull(paging, "paging");
     }
 
     /**
@@ -34,10 +44,18 @@ public class WidgetsListView {
         return widgets;
     }
 
+    /**
+     * @return the metadata for paging
+     */
+    public Paging getPaging() {
+        return paging;
+    }
+
     @Override
     public String toString() {
         return "WidgetsListView{" +
             "widgets.size=" + widgets.size() +
+            ", paging=" + paging +
             '}';
     }
 }

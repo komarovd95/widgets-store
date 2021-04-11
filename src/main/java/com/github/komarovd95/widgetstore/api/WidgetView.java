@@ -1,5 +1,9 @@
 package com.github.komarovd95.widgetstore.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.komarovd95.widgetstore.api.common.Point2D;
+import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
@@ -26,12 +30,13 @@ public class WidgetView {
     @Schema(description = "A timestamp of the last modification", required = true)
     private final Instant modifiedAt;
 
+    @JsonCreator
     private WidgetView(
-        String id,
-        Point2D coordinates,
-        Integer zIndex,
-        WidgetDimensions dimensions,
-        Instant modifiedAt
+        @JsonProperty("id") String id,
+        @JsonProperty("coordinates") Point2D coordinates,
+        @JsonProperty("zIndex") Integer zIndex,
+        @JsonProperty("dimensions") WidgetDimensions dimensions,
+        @JsonProperty("modifiedAt") Instant modifiedAt
     ) {
         this.id = Objects.requireNonNull(id, "id");
         this.coordinates = Objects.requireNonNull(coordinates, "coordinates");

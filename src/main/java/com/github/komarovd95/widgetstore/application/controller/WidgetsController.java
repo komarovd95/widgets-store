@@ -1,12 +1,17 @@
 package com.github.komarovd95.widgetstore.application.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.komarovd95.widgetstore.api.CreateWidgetRequest;
 import com.github.komarovd95.widgetstore.api.UpdateWidgetRequest;
 import com.github.komarovd95.widgetstore.api.WidgetView;
 import com.github.komarovd95.widgetstore.api.WidgetsListView;
+import com.github.komarovd95.widgetstore.api.common.Paging;
+import com.github.komarovd95.widgetstore.application.domain.PagedList;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
+import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
 import com.github.komarovd95.widgetstore.application.storage.WidgetsStorage;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Positive;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,11 +32,17 @@ import java.util.stream.Collectors;
 @Tag(name = "Widgets API", description = "REST API for interaction with widgets")
 public class WidgetsController {
 
+    private static final String DEFAULT_LIMIT = "10";
+    private static final int MAX_LIMIT = 500;
+
     private final WidgetsStorage widgetsStorage;
 
+    private final ObjectMapper objectMapper;
+
     @Autowired
-    public WidgetsController(WidgetsStorage widgetsStorage) {
+    public WidgetsController(WidgetsStorage widgetsStorage, ObjectMapper objectMapper) {
         this.widgetsStorage = widgetsStorage;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -149,13 +161,36 @@ public class WidgetsController {
             )
         )
     )
-    public ResponseEntity<WidgetsListView> getWidgets() {
-        List<Widget> widgets = widgetsStorage.getWidgets();
+    public ResponseEntity<WidgetsListView> getWidgets(
+        @RequestParam(name = "limit", defaultValue = DEFAULT_LIMIT, required = false)
+        @Parameter(
+            description = "A maximum number of widgets that will be returned on the page",
+            schema = @Schema(defaultValue = DEFAULT_LIMIT)
+        )
+        @Positive
+        @Max(MAX_LIMIT)
+            Integer limit,
+        @RequestParam(name = "cursor", required = false)
+        @Parameter(description = "A cursor of the page. If not presented, then the first page will be returned")
+            String cursor
+    ) {
+        PagedList<Widget> pageWidgets = widgetsStorage.getWidgets(
+            new WidgetsFilter(
+                cursor != null ? WidgetsApiConverters.decodeCursor(cursor, objectMapper) : null,
+                limit
+            )
+        );
         return ResponseEntity.ok(
             new WidgetsListView(
-                widgets.stream()
+                pageWidgets.getItems()
+                    .stream()
                     .map(WidgetsApiConverters::toApiView)
-                    .collect(Collectors.toList())
+                    .collect(Collectors.toList()),
+                pageWidgets.getCursor()
+                    .map(nextPageCursor -> Paging.forNonLastPage(
+                        WidgetsApiConverters.encodeCursor(nextPageCursor, objectMapper)
+                    ))
+                    .orElseGet(Paging::forLastPage)
             )
         );
     }

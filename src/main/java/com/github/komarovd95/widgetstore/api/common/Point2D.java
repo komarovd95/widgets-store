@@ -1,6 +1,7 @@
-package com.github.komarovd95.widgetstore.api;
+package com.github.komarovd95.widgetstore.api.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.validation.constraints.NotNull;
@@ -27,7 +28,7 @@ public class Point2D {
     private final Integer y;
 
     @JsonCreator
-    private Point2D(Integer x, Integer y) {
+    private Point2D(@JsonProperty("x") Integer x, @JsonProperty("y") Integer y) {
         this.x = x;
         this.y = y;
     }

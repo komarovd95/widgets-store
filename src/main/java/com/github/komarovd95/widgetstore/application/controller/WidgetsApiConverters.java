@@ -1,8 +1,14 @@
 package com.github.komarovd95.widgetstore.application.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.komarovd95.widgetstore.api.*;
+import com.github.komarovd95.widgetstore.api.common.Point2D;
+import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
+import com.github.komarovd95.widgetstore.application.domain.WidgetsPagingCursor;
 import com.github.komarovd95.widgetstore.application.storage.StoreWidgetParameters;
+
+import java.util.Base64;
 
 /**
  * The class with helper methods for the DTOs conversion.
@@ -68,5 +74,23 @@ public final class WidgetsApiConverters {
             )
             .setModifiedAt(widget.getModifiedAt())
             .build();
+    }
+
+    public static WidgetsPagingCursor decodeCursor(String cursor, ObjectMapper objectMapper) {
+        try {
+            byte[] decoded = Base64.getDecoder().decode(cursor);
+            return objectMapper.readValue(decoded, WidgetsPagingCursor.class);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static String encodeCursor(WidgetsPagingCursor cursor, ObjectMapper objectMapper) {
+        try {
+            byte[] encoded = objectMapper.writeValueAsBytes(cursor);
+            return Base64.getEncoder().encodeToString(encoded);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
