@@ -10,14 +10,14 @@ public class WidgetsFilter {
     /**
      * A cursor that references on the particular page. If null, then the first page will be returned.
      */
-    private final WidgetsPagingCursor cursor;
+    private final Integer cursor;
 
     /**
      * A maximum number of items on the returned paged.
      */
     private final int limit;
 
-    public WidgetsFilter(WidgetsPagingCursor cursor, int limit) {
+    public WidgetsFilter(Integer cursor, int limit) {
         this.cursor = cursor;
         this.limit = limit;
     }
@@ -25,7 +25,7 @@ public class WidgetsFilter {
     /**
      * @return the optional cursor, not null
      */
-    public Optional<WidgetsPagingCursor> getCursor() {
+    public Optional<Integer> getCursor() {
         return Optional.ofNullable(cursor);
     }
 

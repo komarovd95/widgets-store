@@ -20,9 +20,9 @@ public class PagedList<T> {
     /**
      * A cursor for the next page.
      */
-    private final WidgetsPagingCursor cursor;
+    private final Integer cursor;
 
-    private PagedList(List<T> items, WidgetsPagingCursor cursor) {
+    private PagedList(List<T> items, Integer cursor) {
         this.items = Collections.unmodifiableList(items);
         this.cursor = cursor;
     }
@@ -37,7 +37,7 @@ public class PagedList<T> {
     /**
      * @return the optional cursor, not null. Presented only if the next page exists
      */
-    public Optional<WidgetsPagingCursor> getCursor() {
+    public Optional<Integer> getCursor() {
         return Optional.ofNullable(cursor);
     }
 
@@ -69,7 +69,7 @@ public class PagedList<T> {
      * @param <T> the type of items
      * @return the paged list
      */
-    public static <T> PagedList<T> nonLastPage(List<T> items, WidgetsPagingCursor cursor) {
+    public static <T> PagedList<T> nonLastPage(List<T> items, Integer cursor) {
         Objects.requireNonNull(items, "items");
         Objects.requireNonNull(cursor, "cursor");
         return new PagedList<>(items, cursor);

@@ -3,7 +3,6 @@ package com.github.komarovd95.widgetstore.application.storage.inmemory;
 import com.github.komarovd95.widgetstore.application.domain.PagedList;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
 import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
-import com.github.komarovd95.widgetstore.application.domain.WidgetsPagingCursor;
 import com.github.komarovd95.widgetstore.application.service.generator.WidgetIdGenerator;
 import com.github.komarovd95.widgetstore.application.storage.StoreWidgetParameters;
 import com.github.komarovd95.widgetstore.application.storage.WidgetsStorage;
@@ -36,8 +35,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget actualWidget = storage.createWidget(DEFAULT_PARAMETERS);
@@ -60,8 +58,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget actualWidget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -91,8 +88,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget actualWidget = storage.createWidget(
@@ -124,8 +120,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2, id3),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget actualWidget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -174,8 +169,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2, id3, id4),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget actualWidget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -237,8 +231,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget = storage.createWidget(DEFAULT_PARAMETERS);
@@ -281,8 +274,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -328,8 +320,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2, id3),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -378,8 +369,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2, id3),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -426,8 +416,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget = storage.createWidget(DEFAULT_PARAMETERS);
@@ -446,8 +435,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -467,8 +455,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget = storage.createWidget(DEFAULT_PARAMETERS);
@@ -489,8 +476,7 @@ public class InMemoryWidgetsStorageTest {
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id1, id2, id3),
             Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            1
+            Duration.ZERO
         );
 
         Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
@@ -500,175 +486,21 @@ public class InMemoryWidgetsStorageTest {
         PagedList<Widget> page1 = storage.getWidgets(new WidgetsFilter(null, 1));
         Assertions.assertEquals(1, page1.getItems().size());
         Assertions.assertSame(widget1, page1.getItems().get(0));
-        WidgetsPagingCursor page1Cursor = page1.getCursor()
+        Integer page1Cursor = page1.getCursor()
             .orElseGet(() -> Assertions.fail("Cursor must be presented for page 1"));
-        Assertions.assertEquals(3, page1Cursor.getVersion());
-        Assertions.assertEquals(widget2.getZ(), page1Cursor.getZIndex());
+        Assertions.assertEquals(widget1.getZ(), page1Cursor);
 
         PagedList<Widget> page2 = storage.getWidgets(new WidgetsFilter(page1Cursor, 1));
         Assertions.assertEquals(1, page2.getItems().size());
         Assertions.assertSame(widget2, page2.getItems().get(0));
-        WidgetsPagingCursor page2Cursor = page2.getCursor()
+        Integer page2Cursor = page2.getCursor()
             .orElseGet(() -> Assertions.fail("Cursor must be presented for page 2"));
-        Assertions.assertEquals(3, page2Cursor.getVersion());
-        Assertions.assertEquals(widget3.getZ(), page2Cursor.getZIndex());
+        Assertions.assertEquals(widget2.getZ(), page2Cursor);
 
         PagedList<Widget> page3 = storage.getWidgets(new WidgetsFilter(page2Cursor, 1));
         Assertions.assertEquals(1, page3.getItems().size());
         Assertions.assertSame(widget3, page3.getItems().get(0));
         Assertions.assertFalse(page3.getCursor().isPresent());
-    }
-
-    @Test
-    public void should_return_all_widgets_when_paging_is_used_and_widgets_have_been_changed() {
-        String id1 = "test1";
-        String id2 = "test2";
-        String id3 = "test3";
-        Instant timestamp = Instant.now();
-        WidgetsStorage storage = new InMemoryWidgetsStorage(
-            new FixedWidgetIdGenerator(id1, id2, id3),
-            Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            4
-        );
-
-        Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget3 = storage.createWidget(DEFAULT_PARAMETERS);
-
-        PagedList<Widget> page1 = storage.getWidgets(new WidgetsFilter(null, 1));
-        Assertions.assertEquals(1, page1.getItems().size());
-        Assertions.assertSame(widget1, page1.getItems().get(0));
-        WidgetsPagingCursor page1Cursor = page1.getCursor()
-            .orElseGet(() -> Assertions.fail("Cursor must be presented for page 1"));
-        Assertions.assertEquals(3, page1Cursor.getVersion());
-        Assertions.assertEquals(widget2.getZ(), page1Cursor.getZIndex());
-
-        Widget updatedWidget2 = storage
-            .updateWidget(
-                widget2.getId(),
-                StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
-                    .setZ(0)
-                    .setWidth(150)
-                    .setHeight(150)
-                    .build()
-            )
-            .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-
-        PagedList<Widget> page2 = storage.getWidgets(new WidgetsFilter(page1Cursor, 3));
-        Assertions.assertEquals(3, page2.getItems().size());
-        Assertions.assertSame(updatedWidget2, page2.getItems().get(0));
-        assertWidget(page2.getItems().get(1), widget1.getId(), 1, timestamp);
-        Assertions.assertSame(widget3, page2.getItems().get(2));
-        Assertions.assertFalse(page2.getCursor().isPresent());
-    }
-
-    @Test
-    public void should_return_all_widgets_when_paging_is_used_and_modifications_affects_only_next_pages() {
-        String id1 = "test1";
-        String id2 = "test2";
-        String id3 = "test3";
-        Instant timestamp = Instant.now();
-        WidgetsStorage storage = new InMemoryWidgetsStorage(
-            new FixedWidgetIdGenerator(id1, id2, id3),
-            Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            4
-        );
-
-        Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget3 = storage.createWidget(DEFAULT_PARAMETERS);
-
-        PagedList<Widget> page1 = storage.getWidgets(new WidgetsFilter(null, 1));
-        Assertions.assertEquals(1, page1.getItems().size());
-        Assertions.assertSame(widget1, page1.getItems().get(0));
-        WidgetsPagingCursor page1Cursor = page1.getCursor()
-            .orElseGet(() -> Assertions.fail("Cursor must be presented for page 1"));
-        Assertions.assertEquals(3, page1Cursor.getVersion());
-        Assertions.assertEquals(widget2.getZ(), page1Cursor.getZIndex());
-
-        Widget updatedWidget3 = storage
-            .updateWidget(
-                widget3.getId(),
-                StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
-                    .setWidth(150)
-                    .setHeight(150)
-                    .build()
-            )
-            .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-
-        PagedList<Widget> page2 = storage.getWidgets(new WidgetsFilter(page1Cursor, 3));
-        Assertions.assertEquals(2, page2.getItems().size());
-        Assertions.assertSame(widget2, page2.getItems().get(0));
-        Assertions.assertSame(updatedWidget3, page2.getItems().get(1));
-        Assertions.assertFalse(page2.getCursor().isPresent());
-    }
-
-    @Test
-    public void should_return_all_widgets_when_paging_is_used_and_widgets_have_been_changed_several_times() {
-        String id1 = "test1";
-        String id2 = "test2";
-        String id3 = "test3";
-        String id4 = "test4";
-        Instant timestamp = Instant.now();
-        WidgetsStorage storage = new InMemoryWidgetsStorage(
-            new FixedWidgetIdGenerator(id1, id2, id3, id4),
-            Clock.fixed(timestamp, ZoneId.systemDefault()),
-            Duration.ZERO,
-            100
-        );
-
-        Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget3 = storage.createWidget(DEFAULT_PARAMETERS);
-        Widget widget4 = storage.createWidget(DEFAULT_PARAMETERS);
-
-        PagedList<Widget> page1 = storage.getWidgets(new WidgetsFilter(null, 3));
-        Assertions.assertEquals(3, page1.getItems().size());
-        Assertions.assertSame(widget1, page1.getItems().get(0));
-        Assertions.assertSame(widget2, page1.getItems().get(1));
-        Assertions.assertSame(widget3, page1.getItems().get(2));
-        WidgetsPagingCursor page1Cursor = page1.getCursor()
-            .orElseGet(() -> Assertions.fail("Cursor must be presented for page 1"));
-        Assertions.assertEquals(4, page1Cursor.getVersion());
-        Assertions.assertEquals(widget4.getZ(), page1Cursor.getZIndex());
-
-        Widget updatedWidget1 = storage
-            .updateWidget(
-                widget1.getId(),
-                StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
-                    .setZ(0)
-                    .setWidth(150)
-                    .setHeight(150)
-                    .build()
-            )
-            .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Widget updatedWidget3 = storage
-            .updateWidget(
-                widget3.getId(),
-                StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
-                    .setZ(2)
-                    .setWidth(150)
-                    .setHeight(150)
-                    .build()
-            )
-            .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-
-        PagedList<Widget> page2 = storage.getWidgets(new WidgetsFilter(page1Cursor, 3));
-        Assertions.assertEquals(3, page2.getItems().size());
-        Assertions.assertSame(updatedWidget1, page2.getItems().get(0));
-        Assertions.assertSame(updatedWidget3, page2.getItems().get(1));
-        Assertions.assertSame(widget4, page2.getItems().get(2));
-        Assertions.assertFalse(page2.getCursor().isPresent());
     }
 
     private static void assertWidget(Widget widget, String expectedId, int expectedZIndex, Instant expectedTimestamp) {

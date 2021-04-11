@@ -1,6 +1,5 @@
 package com.github.komarovd95.widgetstore.application.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.komarovd95.widgetstore.api.CreateWidgetRequest;
 import com.github.komarovd95.widgetstore.api.UpdateWidgetRequest;
 import com.github.komarovd95.widgetstore.api.WidgetView;
@@ -37,12 +36,9 @@ public class WidgetsController {
 
     private final WidgetsStorage widgetsStorage;
 
-    private final ObjectMapper objectMapper;
-
     @Autowired
-    public WidgetsController(WidgetsStorage widgetsStorage, ObjectMapper objectMapper) {
+    public WidgetsController(WidgetsStorage widgetsStorage) {
         this.widgetsStorage = widgetsStorage;
-        this.objectMapper = objectMapper;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -176,7 +172,7 @@ public class WidgetsController {
     ) {
         PagedList<Widget> pageWidgets = widgetsStorage.getWidgets(
             new WidgetsFilter(
-                cursor != null ? WidgetsApiConverters.decodeCursor(cursor, objectMapper) : null,
+                cursor != null ? Integer.parseInt(cursor) : null,
                 limit
             )
         );
@@ -187,9 +183,7 @@ public class WidgetsController {
                     .map(WidgetsApiConverters::toApiView)
                     .collect(Collectors.toList()),
                 pageWidgets.getCursor()
-                    .map(nextPageCursor -> Paging.forNonLastPage(
-                        WidgetsApiConverters.encodeCursor(nextPageCursor, objectMapper)
-                    ))
+                    .map(nextPageCursor -> Paging.forNonLastPage(nextPageCursor.toString()))
                     .orElseGet(Paging::forLastPage)
             )
         );

@@ -17,21 +17,11 @@ public class InMemoryWidgetsStorageProperties {
      */
     private final Duration lockAcquisitionTimeout;
 
-    /**
-     * A maximum number of versions to be stored. This parameter is used to control the size of the versions list.
-     */
-    private final int maxVersionsToStore;
-
-    public InMemoryWidgetsStorageProperties(Duration lockAcquisitionTimeout, int maxVersionsToStore) {
+    public InMemoryWidgetsStorageProperties(Duration lockAcquisitionTimeout) {
         this.lockAcquisitionTimeout = lockAcquisitionTimeout;
-        this.maxVersionsToStore = maxVersionsToStore;
     }
 
     public Duration getLockAcquisitionTimeout() {
         return lockAcquisitionTimeout;
-    }
-
-    public int getMaxVersionsToStore() {
-        return maxVersionsToStore;
     }
 }
