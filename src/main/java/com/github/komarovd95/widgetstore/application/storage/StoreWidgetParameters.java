@@ -1,5 +1,8 @@
 package com.github.komarovd95.widgetstore.application.storage;
 
+import com.github.komarovd95.widgetstore.application.domain.Region;
+
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -8,50 +11,25 @@ import java.util.Optional;
 public class StoreWidgetParameters {
 
     /**
-     * An X coordinate.
+     * A boundaries.
      */
-    private final int x;
-
-    /**
-     * A Y coordinate.
-     */
-    private final int y;
+    private final Region boundaries;
 
     /**
      * A Z-index. Might be null.
      */
     private final Integer z;
 
-    /**
-     * A width.
-     */
-    private final int width;
-
-    /**
-     * A height.
-     */
-    private final int height;
-
-    private StoreWidgetParameters(int x, int y, Integer z, int width, int height) {
-        this.x = x;
-        this.y = y;
+    private StoreWidgetParameters(Region boundaries, Integer z) {
+        this.boundaries = Objects.requireNonNull(boundaries, "boundaries");
         this.z = z;
-        this.width = width;
-        this.height = height;
     }
 
     /**
-     * @return the X coordinate, not null
+     * @return the boundaries, not null
      */
-    public Integer getX() {
-        return x;
-    }
-
-    /**
-     * @return the Y coordinate, not null
-     */
-    public Integer getY() {
-        return y;
+    public Region getBoundaries() {
+        return boundaries;
     }
 
     /**
@@ -61,30 +39,11 @@ public class StoreWidgetParameters {
         return Optional.ofNullable(z);
     }
 
-    /**
-     * @return the width, not null
-     */
-    public Integer getWidth() {
-        return width;
-    }
-
-    /**
-     * Returns the height of widget.
-     *
-     * @return the height, not null
-     */
-    public Integer getHeight() {
-        return height;
-    }
-
     @Override
     public String toString() {
         return "StoreWidgetParameters{" +
-            "x=" + x +
-            ", y=" + y +
+            "boundaries=" + boundaries +
             ", z=" + z +
-            ", width=" + width +
-            ", height=" + height +
             '}';
     }
 
@@ -102,22 +61,14 @@ public class StoreWidgetParameters {
      */
     public static class Builder {
 
-        private Integer x;
-        private Integer y;
+        private Region boundaries;
         private Integer z;
-        private Integer width;
-        private Integer height;
 
         private Builder() {
         }
 
-        public Builder setX(int x) {
-            this.x = x;
-            return this;
-        }
-
-        public Builder setY(int y) {
-            this.y = y;
+        public Builder setBoundaries(Region boundaries) {
+            this.boundaries = boundaries;
             return this;
         }
 
@@ -126,18 +77,8 @@ public class StoreWidgetParameters {
             return this;
         }
 
-        public Builder setWidth(int width) {
-            this.width = width;
-            return this;
-        }
-
-        public Builder setHeight(int height) {
-            this.height = height;
-            return this;
-        }
-
         public StoreWidgetParameters build() {
-            return new StoreWidgetParameters(x, y, z, width, height);
+            return new StoreWidgetParameters(boundaries, z);
         }
     }
 }

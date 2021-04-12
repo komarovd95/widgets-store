@@ -1,11 +1,13 @@
 package com.github.komarovd95.widgetstore.application.storage.inmemory;
 
 import com.github.komarovd95.widgetstore.application.domain.PagedList;
+import com.github.komarovd95.widgetstore.application.domain.Region;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
 import com.github.komarovd95.widgetstore.application.storage.StoreWidgetParameters;
 import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
 import com.github.komarovd95.widgetstore.application.storage.WidgetsStorage;
 import com.github.komarovd95.widgetstore.application.service.generator.WidgetIdGenerator;
+import com.github.komarovd95.widgetstore.application.storage.inmemory.rtree.WidgetRTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,14 +46,19 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
      * <p>
      * All operations with this map MUST be guarded by {@link #lock}.
      */
-    private final NavigableMap<WidgetSortingKey, Widget> widgetsByZIndex = new TreeMap<>();
+    private final NavigableMap<WidgetSortingKey, WidgetWrapper> widgetsByZIndex = new TreeMap<>();
 
     /**
      * A map for searching widgets by ID.
      * <p>
      * All operations with this map MUST be guarded by {@link #lock}.
      */
-    private final Map<String, Widget> widgetsByIds = new HashMap<>();
+    private final Map<String, WidgetWrapper> widgetsByIds = new HashMap<>();
+
+    /**
+     * An R-tree for spatial search.
+     */
+    private final WidgetRTree spatialIndex = new WidgetRTree();
 
     /**
      * A lock that guards all operations with the stored widgets.
@@ -96,16 +103,15 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
                 .orElseGet(this::getNextSortingKeyForCreation);
             Widget widget = Widget.builder()
                 .setId(id)
-                .setX(parameters.getX())
-                .setY(parameters.getY())
+                .setBoundaries(parameters.getBoundaries())
                 .setZ(key.z)
-                .setWidth(parameters.getWidth())
-                .setHeight(parameters.getHeight())
                 .setModifiedAt(clock.instant())
                 .build();
+            WidgetWrapper wrapper = new WidgetWrapper(widget);
             shiftOverlyingWidgets(key, widget.getModifiedAt());
-            widgetsByZIndex.put(key, widget);
-            widgetsByIds.put(id, widget);
+            widgetsByZIndex.put(key, wrapper);
+            widgetsByIds.put(id, wrapper);
+            spatialIndex.add(id, wrapper.boundaries);
             log.info("Widget has been created successfully: widget={}", widget);
             return widget;
         });
@@ -128,7 +134,7 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(parameters, "parameters");
         return executeWithLock(lock.writeLock(), () -> {
-            Widget widget = widgetsByIds.get(id);
+            WidgetWrapper widget = widgetsByIds.get(id);
             if (widget == null) {
                 log.warn("Widget was not found by given ID: id={}", id);
                 return Optional.empty();
@@ -137,40 +143,39 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
                 .map(WidgetSortingKey::new)
                 .orElseGet(() -> {
                     WidgetSortingKey lastKey = widgetsByZIndex.lastKey();
-                    if (lastKey.z == widget.getZ()) {
+                    if (lastKey.z == widget.z) {
                         return lastKey; // it's already on the foreground
                     } else {
                         return new WidgetSortingKey(lastKey.z + 1);
                     }
                 });
-            Widget widgetToUpdate = Widget.builder(widget)
-                .setX(parameters.getX())
-                .setY(parameters.getY())
-                .setZ(key.z)
-                .setWidth(parameters.getWidth())
-                .setHeight(parameters.getHeight())
-                .setModifiedAt(clock.instant())
-                .build();
-            if (isUpdateNotNeeded(widget, widgetToUpdate)) {
+            if (isUpdateNotNeeded(widget, parameters.getBoundaries(), key.z)) {
                 log.info("Update is not needed: widget={}", widget);
-                return Optional.of(widget);
+                return Optional.of(toWidget(widget));
             }
-            if (widget.getZ() != widgetToUpdate.getZ()) {
-                widgetsByZIndex.remove(new WidgetSortingKey(widget.getZ()));
-                shiftOverlyingWidgets(key, widgetToUpdate.getModifiedAt());
+            widget.modifiedAt = clock.instant();
+            if (widget.z != key.z) {
+                widgetsByZIndex.remove(new WidgetSortingKey(widget.z));
+                shiftOverlyingWidgets(key, widget.modifiedAt);
+                widget.z = key.z;
+                widgetsByZIndex.put(key, widget);
             }
-            widgetsByZIndex.put(key, widgetToUpdate);
-            widgetsByIds.put(id, widgetToUpdate);
-            log.info("Widget has been updated successfully: widget={}", widgetToUpdate);
-            return Optional.of(widgetToUpdate);
+            if (!Objects.equals(widget.boundaries, parameters.getBoundaries())) {
+                spatialIndex.remove(id, widget.boundaries);
+                widget.boundaries = parameters.getBoundaries();
+                spatialIndex.add(id, widget.boundaries);
+            }
+            log.info("Widget has been updated successfully: widget={}", widget);
+            return Optional.of(toWidget(widget));
         });
     }
 
     private void shiftOverlyingWidgets(WidgetSortingKey key, Instant modificationTimestamp) {
-        NavigableMap<WidgetSortingKey, Widget> tailMap = widgetsByZIndex.tailMap(key, true);
+        NavigableMap<WidgetSortingKey, WidgetWrapper> tailMap = widgetsByZIndex.tailMap(key, true);
         int previousZ = key.z;
-        for (Map.Entry<WidgetSortingKey, Widget> entry : tailMap.entrySet()) {
+        for (Map.Entry<WidgetSortingKey, WidgetWrapper> entry : tailMap.entrySet()) {
             WidgetSortingKey entryKey = entry.getKey();
+            WidgetWrapper widget = entry.getValue();
             if (entryKey.z != previousZ) {
                 break;
             }
@@ -178,23 +183,16 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
             // But we can reduce complexity of shifting the overlying widgets from O(n * log n) to O(n)
             // in the worst case
             int shiftedZIndex = ++entryKey.z;
-            Widget shiftedWidget = Widget.builder(entry.getValue())
-                .setZ(shiftedZIndex)
-                .setModifiedAt(modificationTimestamp)
-                .build();
-            entry.setValue(shiftedWidget);
-            widgetsByIds.replace(shiftedWidget.getId(), shiftedWidget);
+            widget.z = shiftedZIndex;
+            widget.modifiedAt = modificationTimestamp;
             previousZ = shiftedZIndex;
-            log.debug("Widget's Z-index has been shifted: widget={}", shiftedWidget);
+            log.debug("Widget's Z-index has been shifted: id={}", widget.id);
         }
     }
 
-    private boolean isUpdateNotNeeded(Widget existingWidget, Widget widgetToUpdate) {
-        return existingWidget.getX() == widgetToUpdate.getX()
-            && existingWidget.getY() == widgetToUpdate.getY()
-            && existingWidget.getZ() == widgetToUpdate.getZ()
-            && existingWidget.getWidth() == widgetToUpdate.getWidth()
-            && existingWidget.getHeight() == widgetToUpdate.getHeight();
+    private boolean isUpdateNotNeeded(WidgetWrapper existingWidget, Region newBoundaries, int newZIndex) {
+        return Objects.equals(existingWidget.boundaries, newBoundaries)
+            && existingWidget.z == newZIndex;
     }
 
     /**
@@ -204,9 +202,10 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
     public void deleteWidget(String id) {
         Objects.requireNonNull(id, "id");
         executeWithLock(lock.writeLock(), () -> {
-            Widget removedWidget = widgetsByIds.remove(id);
+            WidgetWrapper removedWidget = widgetsByIds.remove(id);
             if (removedWidget != null) {
-                widgetsByZIndex.remove(new WidgetSortingKey(removedWidget.getZ()));
+                widgetsByZIndex.remove(new WidgetSortingKey(removedWidget.z));
+                spatialIndex.remove(id, removedWidget.boundaries);
                 log.info("Widget has been removed successfully: widget={}", removedWidget);
             } else {
                 log.info("Widget was not found by given ID for removal: id={}", id);
@@ -221,7 +220,10 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
     @Override
     public Optional<Widget> getWidgetById(String id) {
         Objects.requireNonNull(id, "id");
-        return executeWithLock(lock.readLock(), () -> Optional.ofNullable(widgetsByIds.get(id)));
+        return executeWithLock(lock.readLock(), () ->
+            Optional.ofNullable(widgetsByIds.get(id))
+                .map(InMemoryWidgetsStorage::toWidget)
+        );
     }
 
     /**
@@ -231,13 +233,11 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
     public PagedList<Widget> getWidgets(WidgetsFilter filter) {
         Objects.requireNonNull(filter, "filter");
         return executeWithLock(lock.readLock(), () -> {
-            List<Widget> items = filter.getCursor()
-                    .map(cursor -> widgetsByZIndex.tailMap(new WidgetSortingKey(cursor), false))
-                    .orElse(widgetsByZIndex)
-                    .values()
-                    .stream()
-                    .limit(filter.getLimit() + 1)
-                    .collect(Collectors.toList());
+            Integer cursor = filter.getCursor().orElse(null);
+            int limit = filter.getLimit() + 1;
+            List<Widget> items = filter.getRegion()
+                .map(region -> getWidgetsBySpatialIndex(region, cursor, limit))
+                .orElseGet(() -> getWidgetsByZIndex(cursor, limit));
             if (items.size() > filter.getLimit()) {
                 List<Widget> pageItems = items.subList(0, filter.getLimit());
                 return PagedList.nonLastPage(pageItems, pageItems.get(pageItems.size() - 1).getZ());
@@ -245,6 +245,39 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
                 return PagedList.lastPage(items);
             }
         });
+    }
+
+    private List<Widget> getWidgetsBySpatialIndex(Region region, Integer cursor, int limit) {
+        // top-N sort
+        List<WidgetWrapper> widgets = new ArrayList<>();
+        spatialIndex.contains(region, widgetId -> {
+            WidgetWrapper widget = widgetsByIds.get(widgetId);
+            if (cursor == null || widget.z > cursor) {
+                int index = -Collections.binarySearch(widgets, widget, Comparator.comparingInt(w -> w.z)) - 1;
+                if (index < limit) {
+                    widgets.add(index, widget);
+                    if (widgets.size() > limit) {
+                        widgets.subList(limit, widgets.size()).clear();
+                    }
+                }
+            }
+        });
+        return widgets
+            .stream()
+            .map(InMemoryWidgetsStorage::toWidget)
+            .collect(Collectors.toList());
+    }
+
+    private List<Widget> getWidgetsByZIndex(Integer cursor, int limit) {
+        Map<WidgetSortingKey, WidgetWrapper> widgets = cursor != null
+            ? widgetsByZIndex.tailMap(new WidgetSortingKey(cursor), false)
+            : widgetsByZIndex;
+        return widgets
+            .values()
+            .stream()
+            .limit(limit)
+            .map(InMemoryWidgetsStorage::toWidget)
+            .collect(Collectors.toList());
     }
 
     private <T> T executeWithLock(Lock lock, Supplier<T> action) {
@@ -274,5 +307,40 @@ public class InMemoryWidgetsStorage implements WidgetsStorage {
         public int compareTo(WidgetSortingKey other) {
             return Integer.compare(z, other.z);
         }
+    }
+
+    private static class WidgetWrapper {
+
+        private final String id;
+        private Region boundaries;
+        private int z;
+        private Instant modifiedAt;
+
+        private WidgetWrapper(Widget widget) {
+            Objects.requireNonNull(widget, "widget");
+            this.id = widget.getId();
+            this.boundaries = widget.getBoundaries();
+            this.z = widget.getZ();
+            this.modifiedAt = widget.getModifiedAt();
+        }
+
+        @Override
+        public String toString() {
+            return "WidgetWrapper{" +
+                "id='" + id + '\'' +
+                ", boundaries=" + boundaries +
+                ", z=" + z +
+                ", modifiedAt=" + modifiedAt +
+                '}';
+        }
+    }
+
+    private static Widget toWidget(WidgetWrapper wrapper) {
+        return Widget.builder()
+            .setId(wrapper.id)
+            .setBoundaries(wrapper.boundaries)
+            .setZ(wrapper.z)
+            .setModifiedAt(wrapper.modifiedAt)
+            .build();
     }
 }

@@ -8,6 +8,11 @@ import java.util.Optional;
 public class WidgetsFilter {
 
     /**
+     * A region for spatial search of widgets.
+     */
+    private final Region region;
+
+    /**
      * A cursor that references on the particular page. If null, then the first page will be returned.
      */
     private final Integer cursor;
@@ -17,9 +22,17 @@ public class WidgetsFilter {
      */
     private final int limit;
 
-    public WidgetsFilter(Integer cursor, int limit) {
+    public WidgetsFilter(Region region, Integer cursor, int limit) {
+        this.region = region;
         this.cursor = cursor;
         this.limit = limit;
+    }
+
+    /**
+     * @return the optional region, not null
+     */
+    public Optional<Region> getRegion() {
+        return Optional.ofNullable(region);
     }
 
     /**
@@ -39,7 +52,8 @@ public class WidgetsFilter {
     @Override
     public String toString() {
         return "WidgetsFilter{" +
-            "cursor=" + cursor +
+            "region=" + region +
+            ", cursor=" + cursor +
             ", limit=" + limit +
             '}';
     }

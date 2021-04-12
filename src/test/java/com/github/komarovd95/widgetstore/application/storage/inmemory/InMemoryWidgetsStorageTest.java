@@ -1,6 +1,7 @@
 package com.github.komarovd95.widgetstore.application.storage.inmemory;
 
 import com.github.komarovd95.widgetstore.application.domain.PagedList;
+import com.github.komarovd95.widgetstore.application.domain.Region;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
 import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
 import com.github.komarovd95.widgetstore.application.service.generator.WidgetIdGenerator;
@@ -19,14 +20,18 @@ import java.util.List;
 
 public class InMemoryWidgetsStorageTest {
 
-    private static final StoreWidgetParameters DEFAULT_PARAMETERS = StoreWidgetParameters.builder()
+    private static final Region DEFAULT_BOUNDARIES = Region.builder()
         .setX(0)
         .setY(0)
         .setWidth(100)
         .setHeight(100)
+        .builder();
+
+    private static final StoreWidgetParameters DEFAULT_PARAMETERS = StoreWidgetParameters.builder()
+        .setBoundaries(DEFAULT_BOUNDARIES)
         .build();
 
-    private static final WidgetsFilter DEFAULT_FILTER = new WidgetsFilter(null, 100);
+    private static final WidgetsFilter DEFAULT_FILTER = new WidgetsFilter(null, null, 100);
 
     @Test
     public void should_create_new_widget_with_default_Z_index_when_no_other_widgets_exist() {
@@ -39,15 +44,15 @@ public class InMemoryWidgetsStorageTest {
         );
 
         Widget actualWidget = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget, id, 0, timestamp);
+        assertWidget(actualWidget, id, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget widgetFoundById = storage.getWidgetById(id)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget, widgetFoundById);
+        assertWidget(widgetFoundById, id, DEFAULT_BOUNDARIES, 0, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(1, widgets.size());
-        Assertions.assertSame(actualWidget, widgets.get(0));
+        assertWidget(widgets.get(0), id, DEFAULT_BOUNDARIES, 0, timestamp);
     }
 
     @Test
@@ -62,23 +67,23 @@ public class InMemoryWidgetsStorageTest {
         );
 
         Widget actualWidget1 = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget1, id1, 0, timestamp);
+        assertWidget(actualWidget1, id1, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget widget1FoundById = storage.getWidgetById(id1)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget1, widget1FoundById);
+        assertWidget(widget1FoundById, id1, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget actualWidget2 = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget2, id2, 1, timestamp);
+        assertWidget(actualWidget2, id2, DEFAULT_BOUNDARIES, 1, timestamp);
 
         Widget widget2FoundById = storage.getWidgetById(id2)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget2, widget2FoundById);
+        assertWidget(widget2FoundById, id2, DEFAULT_BOUNDARIES, 1, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(2, widgets.size());
-        Assertions.assertSame(actualWidget1, widgets.get(0));
-        Assertions.assertSame(actualWidget2, widgets.get(1));
+        assertWidget(widgets.get(0), id1, DEFAULT_BOUNDARIES, 0, timestamp);
+        assertWidget(widgets.get(1), id2, DEFAULT_BOUNDARIES, 1, timestamp);
     }
 
     @Test
@@ -93,22 +98,19 @@ public class InMemoryWidgetsStorageTest {
 
         Widget actualWidget = storage.createWidget(
             StoreWidgetParameters.builder()
-                .setX(0)
-                .setY(0)
+                .setBoundaries(DEFAULT_PARAMETERS.getBoundaries())
                 .setZ(3)
-                .setWidth(100)
-                .setHeight(100)
                 .build()
         );
-        assertWidget(actualWidget, id, 3, timestamp);
+        assertWidget(actualWidget, id, DEFAULT_BOUNDARIES, 3, timestamp);
 
         Widget widgetFoundById = storage.getWidgetById(id)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget, widgetFoundById);
+        assertWidget(widgetFoundById, id, DEFAULT_BOUNDARIES, 3, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(1, widgets.size());
-        Assertions.assertSame(actualWidget, widgets.get(0));
+        assertWidget(widgets.get(0), id, DEFAULT_BOUNDARIES, 3, timestamp);
     }
 
     @Test
@@ -124,39 +126,36 @@ public class InMemoryWidgetsStorageTest {
         );
 
         Widget actualWidget1 = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget1, id1, 0, timestamp);
+        assertWidget(actualWidget1, id1, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget widget1FoundById = storage.getWidgetById(id1)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget1, widget1FoundById);
+        assertWidget(widget1FoundById, id1, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget actualWidget2 = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget2, id2, 1, timestamp);
+        assertWidget(actualWidget2, id2, DEFAULT_BOUNDARIES, 1, timestamp);
 
         Widget widget2FoundById = storage.getWidgetById(id2)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget2, widget2FoundById);
+        assertWidget(widget2FoundById, id2, DEFAULT_BOUNDARIES, 1, timestamp);
 
         Widget actualWidget3 = storage.createWidget(
             StoreWidgetParameters.builder()
-                .setX(0)
-                .setY(0)
+                .setBoundaries(DEFAULT_PARAMETERS.getBoundaries())
                 .setZ(0)
-                .setWidth(100)
-                .setHeight(100)
                 .build()
         );
-        assertWidget(actualWidget3, id3, 0, timestamp);
+        assertWidget(actualWidget3, id3, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget widget3FoundById = storage.getWidgetById(id3)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget3, widget3FoundById);
+        assertWidget(widget3FoundById, id3, DEFAULT_BOUNDARIES, 0, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(3, widgets.size());
-        Assertions.assertSame(actualWidget3, widgets.get(0));
-        assertWidget(widgets.get(1), id1, 1, timestamp);
-        assertWidget(widgets.get(2), id2, 2, timestamp);
+        assertWidget(widgets.get(0), id3, DEFAULT_BOUNDARIES, 0, timestamp);
+        assertWidget(widgets.get(1), id1, DEFAULT_BOUNDARIES, 1, timestamp);
+        assertWidget(widgets.get(2), id2, DEFAULT_BOUNDARIES, 2, timestamp);
     }
 
     @Test
@@ -173,55 +172,49 @@ public class InMemoryWidgetsStorageTest {
         );
 
         Widget actualWidget1 = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget1, id1, 0, timestamp);
+        assertWidget(actualWidget1, id1, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget widget1FoundById = storage.getWidgetById(id1)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget1, widget1FoundById);
+        assertWidget(widget1FoundById, id1, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget actualWidget2 = storage.createWidget(DEFAULT_PARAMETERS);
-        assertWidget(actualWidget2, id2, 1, timestamp);
+        assertWidget(actualWidget2, id2, DEFAULT_BOUNDARIES, 1, timestamp);
 
         Widget widget2FoundById = storage.getWidgetById(id2)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget2, widget2FoundById);
+        assertWidget(widget2FoundById, id2, DEFAULT_BOUNDARIES, 1, timestamp);
 
         Widget actualWidget3 = storage.createWidget(
             StoreWidgetParameters.builder()
-                .setX(0)
-                .setY(0)
+                .setBoundaries(DEFAULT_PARAMETERS.getBoundaries())
                 .setZ(3)
-                .setWidth(100)
-                .setHeight(100)
                 .build()
         );
-        assertWidget(actualWidget3, id3, 3, timestamp);
+        assertWidget(actualWidget3, id3, DEFAULT_BOUNDARIES, 3, timestamp);
 
         Widget widget3FoundById = storage.getWidgetById(id3)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget3, widget3FoundById);
+        assertWidget(widget3FoundById, id3, DEFAULT_BOUNDARIES, 3, timestamp);
 
         Widget actualWidget4 = storage.createWidget(
             StoreWidgetParameters.builder()
-                .setX(0)
-                .setY(0)
+                .setBoundaries(DEFAULT_PARAMETERS.getBoundaries())
                 .setZ(0)
-                .setWidth(100)
-                .setHeight(100)
                 .build()
         );
-        assertWidget(actualWidget4, id4, 0, timestamp);
+        assertWidget(actualWidget4, id4, DEFAULT_BOUNDARIES, 0, timestamp);
 
         Widget widget4FoundById = storage.getWidgetById(id4)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget4, widget4FoundById);
+        assertWidget(widget4FoundById, id4, DEFAULT_BOUNDARIES, 0, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(4, widgets.size());
-        Assertions.assertSame(actualWidget4, widgets.get(0));
-        assertWidget(widgets.get(1), id1, 1, timestamp);
-        assertWidget(widgets.get(2), id2, 2, timestamp);
-        Assertions.assertSame(actualWidget3, widgets.get(3));
+        assertWidget(widgets.get(0), id4, DEFAULT_BOUNDARIES, 0, timestamp);
+        assertWidget(widgets.get(1), id1, DEFAULT_BOUNDARIES, 1, timestamp);
+        assertWidget(widgets.get(2), id2, DEFAULT_BOUNDARIES, 2, timestamp);
+        assertWidget(widgets.get(3), id3, DEFAULT_BOUNDARIES, 3, timestamp);
     }
 
     @Test
@@ -236,34 +229,31 @@ public class InMemoryWidgetsStorageTest {
 
         Widget widget = storage.createWidget(DEFAULT_PARAMETERS);
 
+        Region boundaries = Region.builder()
+            .setX(100)
+            .setY(100)
+            .setWidth(150)
+            .setHeight(150)
+            .builder();
         Widget actualWidget = storage
             .updateWidget(
                 widget.getId(),
                 StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
-                    .setWidth(150)
-                    .setHeight(150)
+                    .setBoundaries(
+                        boundaries
+                    )
                     .build()
             )
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertAll(
-            () -> Assertions.assertEquals(id, actualWidget.getId()),
-            () -> Assertions.assertEquals(100, actualWidget.getX()),
-            () -> Assertions.assertEquals(100, actualWidget.getY()),
-            () -> Assertions.assertEquals(0, actualWidget.getZ()),
-            () -> Assertions.assertEquals(150, actualWidget.getWidth()),
-            () -> Assertions.assertEquals(150, actualWidget.getHeight()),
-            () -> Assertions.assertEquals(timestamp, actualWidget.getModifiedAt())
-        );
+        assertWidget(actualWidget, id, boundaries, 0, timestamp);
 
         Widget widgetFoundById = storage.getWidgetById(id)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget, widgetFoundById);
+        assertWidget(widgetFoundById, id, boundaries, 0, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(1, widgets.size());
-        Assertions.assertSame(actualWidget, widgets.get(0));
+        assertWidget(widgets.get(0), id, boundaries, 0, timestamp);
     }
 
     @Test
@@ -280,35 +270,30 @@ public class InMemoryWidgetsStorageTest {
         Widget widget1 = storage.createWidget(DEFAULT_PARAMETERS);
         Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
 
+        Region boundaries = Region.builder()
+            .setX(100)
+            .setY(100)
+            .setWidth(150)
+            .setHeight(150)
+            .builder();
         Widget actualWidget = storage
             .updateWidget(
                 widget1.getId(),
                 StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
-                    .setWidth(150)
-                    .setHeight(150)
+                    .setBoundaries(boundaries)
                     .build()
             )
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertAll(
-            () -> Assertions.assertEquals(id1, actualWidget.getId()),
-            () -> Assertions.assertEquals(100, actualWidget.getX()),
-            () -> Assertions.assertEquals(100, actualWidget.getY()),
-            () -> Assertions.assertEquals(2, actualWidget.getZ()),
-            () -> Assertions.assertEquals(150, actualWidget.getWidth()),
-            () -> Assertions.assertEquals(150, actualWidget.getHeight()),
-            () -> Assertions.assertEquals(timestamp, actualWidget.getModifiedAt())
-        );
+        assertWidget(actualWidget, id1, boundaries, 2, timestamp);
 
         Widget widgetFoundById = storage.getWidgetById(id1)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget, widgetFoundById);
+        assertWidget(widgetFoundById, id1, boundaries, 2, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(2, widgets.size());
-        Assertions.assertSame(widget2, widgets.get(0));
-        Assertions.assertSame(actualWidget, widgets.get(1));
+        assertWidget(widgets.get(0), widget2.getId(), DEFAULT_BOUNDARIES, 1, timestamp);
+        assertWidget(widgets.get(1), widget1.getId(), boundaries, 2, timestamp);
     }
 
     @Test
@@ -327,37 +312,32 @@ public class InMemoryWidgetsStorageTest {
         Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
         Widget widget3 = storage.createWidget(DEFAULT_PARAMETERS);
 
+        Region boundaries = Region.builder()
+            .setX(100)
+            .setY(100)
+            .setWidth(150)
+            .setHeight(150)
+            .builder();
         Widget actualWidget = storage
             .updateWidget(
                 widget3.getId(),
                 StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
+                    .setBoundaries(boundaries)
                     .setZ(0)
-                    .setWidth(150)
-                    .setHeight(150)
                     .build()
             )
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertAll(
-            () -> Assertions.assertEquals(id3, actualWidget.getId()),
-            () -> Assertions.assertEquals(100, actualWidget.getX()),
-            () -> Assertions.assertEquals(100, actualWidget.getY()),
-            () -> Assertions.assertEquals(0, actualWidget.getZ()),
-            () -> Assertions.assertEquals(150, actualWidget.getWidth()),
-            () -> Assertions.assertEquals(150, actualWidget.getHeight()),
-            () -> Assertions.assertEquals(timestamp, actualWidget.getModifiedAt())
-        );
+        assertWidget(actualWidget, id3, boundaries, 0, timestamp);
 
         Widget widgetFoundById = storage.getWidgetById(id3)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget, widgetFoundById);
+        assertWidget(widgetFoundById, id3, boundaries, 0, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(3, widgets.size());
-        Assertions.assertSame(actualWidget, widgets.get(0));
-        assertWidget(widgets.get(1), widget1.getId(), 1, timestamp);
-        assertWidget(widgets.get(2), widget2.getId(), 2, timestamp);
+        assertWidget(widgets.get(0), widget3.getId(), boundaries, 0, timestamp);
+        assertWidget(widgets.get(1), widget1.getId(), DEFAULT_BOUNDARIES, 1, timestamp);
+        assertWidget(widgets.get(2), widget2.getId(), DEFAULT_BOUNDARIES, 2, timestamp);
     }
 
     @Test
@@ -376,46 +356,40 @@ public class InMemoryWidgetsStorageTest {
         Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
         Widget widget3 = storage.createWidget(DEFAULT_PARAMETERS);
 
+        Region boundaries = Region.builder()
+            .setX(100)
+            .setY(100)
+            .setWidth(150)
+            .setHeight(150)
+            .builder();
         Widget actualWidget = storage
             .updateWidget(
                 widget2.getId(),
                 StoreWidgetParameters.builder()
-                    .setX(100)
-                    .setY(100)
+                    .setBoundaries(boundaries)
                     .setZ(0)
-                    .setWidth(150)
-                    .setHeight(150)
                     .build()
             )
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertAll(
-            () -> Assertions.assertEquals(id2, actualWidget.getId()),
-            () -> Assertions.assertEquals(100, actualWidget.getX()),
-            () -> Assertions.assertEquals(100, actualWidget.getY()),
-            () -> Assertions.assertEquals(0, actualWidget.getZ()),
-            () -> Assertions.assertEquals(150, actualWidget.getWidth()),
-            () -> Assertions.assertEquals(150, actualWidget.getHeight()),
-            () -> Assertions.assertEquals(timestamp, actualWidget.getModifiedAt())
-        );
+        assertWidget(actualWidget, id2, boundaries, 0, timestamp);
 
         Widget widgetFoundById = storage.getWidgetById(id2)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(actualWidget, widgetFoundById);
+        assertWidget(widgetFoundById, id2, boundaries, 0, timestamp);
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(3, widgets.size());
-        Assertions.assertSame(actualWidget, widgets.get(0));
-        assertWidget(widgets.get(1), widget1.getId(), 1, timestamp);
-        Assertions.assertSame(widget3, widgets.get(2));
+        assertWidget(widgets.get(0), widget2.getId(), boundaries, 0, timestamp);
+        assertWidget(widgets.get(1), widget1.getId(), DEFAULT_BOUNDARIES, 1, timestamp);
+        assertWidget(widgets.get(2), widget3.getId(), DEFAULT_BOUNDARIES, 2, timestamp);
     }
 
     @Test
     public void should_not_update_widget_when_update_is_not_needed() {
         String id = "test";
-        Instant timestamp = Instant.now();
         WidgetsStorage storage = new InMemoryWidgetsStorage(
             new FixedWidgetIdGenerator(id),
-            Clock.fixed(timestamp, ZoneId.systemDefault()),
+            Clock.systemUTC(),
             Duration.ZERO
         );
 
@@ -424,7 +398,7 @@ public class InMemoryWidgetsStorageTest {
         Widget actualWidget = storage
             .updateWidget(widget.getId(), DEFAULT_PARAMETERS)
             .orElseGet(() -> Assertions.fail("Widget was not found by ID"));
-        Assertions.assertSame(widget, actualWidget);
+        assertWidget(actualWidget, widget.getId(), widget.getBoundaries(), widget.getZ(), widget.getModifiedAt());
     }
 
     @Test
@@ -445,7 +419,7 @@ public class InMemoryWidgetsStorageTest {
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(1, widgets.size());
-        Assertions.assertSame(widget2, widgets.get(0));
+        assertWidget(widgets.get(0), widget2.getId(), widget2.getBoundaries(), widget2.getZ(), widget2.getModifiedAt());
     }
 
     @Test
@@ -464,7 +438,7 @@ public class InMemoryWidgetsStorageTest {
 
         List<Widget> widgets = storage.getWidgets(DEFAULT_FILTER).getItems();
         Assertions.assertEquals(1, widgets.size());
-        Assertions.assertSame(widget, widgets.get(0));
+        assertWidget(widgets.get(0), widget.getId(), widget.getBoundaries(), widget.getZ(), widget.getModifiedAt());
     }
 
     @Test
@@ -483,34 +457,294 @@ public class InMemoryWidgetsStorageTest {
         Widget widget2 = storage.createWidget(DEFAULT_PARAMETERS);
         Widget widget3 = storage.createWidget(DEFAULT_PARAMETERS);
 
-        PagedList<Widget> page1 = storage.getWidgets(new WidgetsFilter(null, 1));
+        PagedList<Widget> page1 = storage.getWidgets(new WidgetsFilter(null, null, 1));
         Assertions.assertEquals(1, page1.getItems().size());
-        Assertions.assertSame(widget1, page1.getItems().get(0));
+        assertWidget(
+            page1.getItems().get(0),
+            widget1.getId(),
+            widget1.getBoundaries(),
+            widget1.getZ(),
+            widget1.getModifiedAt()
+        );
         Integer page1Cursor = page1.getCursor()
             .orElseGet(() -> Assertions.fail("Cursor must be presented for page 1"));
         Assertions.assertEquals(widget1.getZ(), page1Cursor);
 
-        PagedList<Widget> page2 = storage.getWidgets(new WidgetsFilter(page1Cursor, 1));
+        PagedList<Widget> page2 = storage.getWidgets(new WidgetsFilter(null, page1Cursor, 1));
         Assertions.assertEquals(1, page2.getItems().size());
-        Assertions.assertSame(widget2, page2.getItems().get(0));
+        assertWidget(
+            page2.getItems().get(0),
+            widget2.getId(),
+            widget2.getBoundaries(),
+            widget2.getZ(),
+            widget2.getModifiedAt()
+        );
         Integer page2Cursor = page2.getCursor()
             .orElseGet(() -> Assertions.fail("Cursor must be presented for page 2"));
         Assertions.assertEquals(widget2.getZ(), page2Cursor);
 
-        PagedList<Widget> page3 = storage.getWidgets(new WidgetsFilter(page2Cursor, 1));
+        PagedList<Widget> page3 = storage.getWidgets(new WidgetsFilter(null, page2Cursor, 1));
         Assertions.assertEquals(1, page3.getItems().size());
-        Assertions.assertSame(widget3, page3.getItems().get(0));
+        assertWidget(
+            page3.getItems().get(0),
+            widget3.getId(),
+            widget3.getBoundaries(),
+            widget3.getZ(),
+            widget3.getModifiedAt()
+        );
         Assertions.assertFalse(page3.getCursor().isPresent());
     }
 
-    private static void assertWidget(Widget widget, String expectedId, int expectedZIndex, Instant expectedTimestamp) {
+    @Test
+    public void should_return_all_widgets_when_spatial_search_is_used() {
+        String id1 = "test1";
+        String id2 = "test2";
+        String id3 = "test3";
+        Instant timestamp = Instant.now();
+        WidgetsStorage storage = new InMemoryWidgetsStorage(
+            new FixedWidgetIdGenerator(id1, id2, id3),
+            Clock.fixed(timestamp, ZoneId.systemDefault()),
+            Duration.ZERO
+        );
+
+        Widget widget1 = storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(0)
+                        .setY(0)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+        Widget widget2 = storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(0)
+                        .setY(50)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+        Widget widget3 = storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(50)
+                        .setY(50)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+
+        PagedList<Widget> pagedWidgets = storage.getWidgets(
+            new WidgetsFilter(
+                Region.builder()
+                    .setX(0)
+                    .setY(0)
+                    .setWidth(100)
+                    .setHeight(150)
+                    .builder(),
+                null,
+                100
+            )
+        );
+        Assertions.assertEquals(2, pagedWidgets.getItems().size());
+        assertWidget(
+            pagedWidgets.getItems().get(0),
+            widget1.getId(),
+            widget1.getBoundaries(),
+            widget1.getZ(),
+            widget1.getModifiedAt()
+        );
+        assertWidget(
+            pagedWidgets.getItems().get(1),
+            widget2.getId(),
+            widget2.getBoundaries(),
+            widget2.getZ(),
+            widget2.getModifiedAt()
+        );
+        Assertions.assertFalse(pagedWidgets.getCursor().isPresent());
+    }
+
+    @Test
+    public void should_return_all_widgets_when_spatial_search_and_paging_are_used() {
+        String id1 = "test1";
+        String id2 = "test2";
+        String id3 = "test3";
+        Instant timestamp = Instant.now();
+        WidgetsStorage storage = new InMemoryWidgetsStorage(
+            new FixedWidgetIdGenerator(id1, id2, id3),
+            Clock.fixed(timestamp, ZoneId.systemDefault()),
+            Duration.ZERO
+        );
+
+        Widget widget1 = storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(0)
+                        .setY(0)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+        Widget widget2 = storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(0)
+                        .setY(50)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+        Widget widget3 = storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(50)
+                        .setY(50)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+
+        Region searchBoundaries = Region.builder()
+            .setX(0)
+            .setY(0)
+            .setWidth(100)
+            .setHeight(150)
+            .builder();
+
+        PagedList<Widget> page1 = storage.getWidgets(
+            new WidgetsFilter(
+                searchBoundaries,
+                null,
+                1
+            )
+        );
+        Assertions.assertEquals(1, page1.getItems().size());
+        assertWidget(
+            page1.getItems().get(0),
+            widget1.getId(),
+            widget1.getBoundaries(),
+            widget1.getZ(),
+            widget1.getModifiedAt()
+        );
+        Integer page1Cursor = page1.getCursor()
+            .orElseGet(() -> Assertions.fail("Cursor must be presented for page 1"));
+        Assertions.assertEquals(widget1.getZ(), page1Cursor);
+
+        PagedList<Widget> page2 = storage.getWidgets(
+            new WidgetsFilter(
+                searchBoundaries,
+                page1Cursor,
+                1
+            )
+        );
+        Assertions.assertEquals(1, page2.getItems().size());
+        assertWidget(
+            page2.getItems().get(0),
+            widget2.getId(),
+            widget2.getBoundaries(),
+            widget2.getZ(),
+            widget2.getModifiedAt()
+        );
+        Assertions.assertFalse(page2.getCursor().isPresent());
+    }
+
+    @Test
+    public void should_return_no_widgets_when_spatial_search_returned_0_entries() {
+        String id1 = "test1";
+        String id2 = "test2";
+        String id3 = "test3";
+        Instant timestamp = Instant.now();
+        WidgetsStorage storage = new InMemoryWidgetsStorage(
+            new FixedWidgetIdGenerator(id1, id2, id3),
+            Clock.fixed(timestamp, ZoneId.systemDefault()),
+            Duration.ZERO
+        );
+
+        storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(0)
+                        .setY(0)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+        storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(0)
+                        .setY(50)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+        storage.createWidget(
+            StoreWidgetParameters.builder()
+                .setBoundaries(
+                    Region.builder()
+                        .setX(50)
+                        .setY(50)
+                        .setWidth(100)
+                        .setHeight(100)
+                        .builder()
+                )
+                .build()
+        );
+
+        Region searchBoundaries = Region.builder()
+            .setX(0)
+            .setY(0)
+            .setWidth(50)
+            .setHeight(50)
+            .builder();
+
+        PagedList<Widget> page = storage.getWidgets(
+            new WidgetsFilter(
+                searchBoundaries,
+                null,
+                1
+            )
+        );
+        Assertions.assertEquals(0, page.getItems().size());
+        Assertions.assertFalse(page.getCursor().isPresent());
+    }
+
+    private static void assertWidget(
+        Widget widget,
+        String expectedId,
+        Region expectedBoundaries,
+        int expectedZIndex,
+        Instant expectedTimestamp
+    ) {
         Assertions.assertAll(
             () -> Assertions.assertEquals(expectedId, widget.getId()),
-            () -> Assertions.assertEquals(0, widget.getX()),
-            () -> Assertions.assertEquals(0, widget.getY()),
+            () -> Assertions.assertEquals(expectedBoundaries, widget.getBoundaries()),
             () -> Assertions.assertEquals(expectedZIndex, widget.getZ()),
-            () -> Assertions.assertEquals(100, widget.getWidth()),
-            () -> Assertions.assertEquals(100, widget.getHeight()),
             () -> Assertions.assertEquals(expectedTimestamp, widget.getModifiedAt())
         );
     }

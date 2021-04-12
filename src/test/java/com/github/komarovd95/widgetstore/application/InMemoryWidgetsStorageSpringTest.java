@@ -310,6 +310,100 @@ public class InMemoryWidgetsStorageSpringTest {
         Assertions.assertFalse(secondPageWidgets.getPaging().getHasMore());
     }
 
+    @Test
+    public void should_return_all_widgets_when_request_with_spatial_search_is_valid() {
+        ResponseEntity<WidgetView> creationResponse1 = testRestTemplate.postForEntity(
+            "/api/widgets",
+            new CreateWidgetRequest(
+                Point2D.builder()
+                    .setX(0)
+                    .setY(0)
+                    .build(),
+                null,
+                WidgetDimensions.builder()
+                    .setWidth(100)
+                    .setHeight(100)
+                    .build()
+            ),
+            WidgetView.class
+        );
+        Assertions.assertEquals(HttpStatus.OK, creationResponse1.getStatusCode());
+        WidgetView widget1 = creationResponse1.getBody();
+        Assertions.assertNotNull(widget1);
+
+        ResponseEntity<WidgetView> creationResponse2 = testRestTemplate.postForEntity(
+            "/api/widgets",
+            new CreateWidgetRequest(
+                Point2D.builder()
+                    .setX(0)
+                    .setY(50)
+                    .build(),
+                null,
+                WidgetDimensions.builder()
+                    .setWidth(100)
+                    .setHeight(100)
+                    .build()
+            ),
+            WidgetView.class
+        );
+        Assertions.assertEquals(HttpStatus.OK, creationResponse2.getStatusCode());
+        WidgetView widget2 = creationResponse2.getBody();
+        Assertions.assertNotNull(widget2);
+
+        ResponseEntity<WidgetView> creationResponse3 = testRestTemplate.postForEntity(
+            "/api/widgets",
+            new CreateWidgetRequest(
+                Point2D.builder()
+                    .setX(50)
+                    .setY(50)
+                    .build(),
+                null,
+                WidgetDimensions.builder()
+                    .setWidth(100)
+                    .setHeight(100)
+                    .build()
+            ),
+            WidgetView.class
+        );
+        Assertions.assertEquals(HttpStatus.OK, creationResponse3.getStatusCode());
+        WidgetView widget3 = creationResponse3.getBody();
+        Assertions.assertNotNull(widget3);
+
+        ResponseEntity<WidgetsListView> firstPageResponse = testRestTemplate.getForEntity(
+            "/api/widgets?limit={limit}&x={x}&y={y}&width={width}&height={height}",
+            WidgetsListView.class,
+            1,
+            0,
+            0,
+            100,
+            150
+        );
+        Assertions.assertEquals(HttpStatus.OK, firstPageResponse.getStatusCode());
+        WidgetsListView firstPageWidgets = firstPageResponse.getBody();
+        Assertions.assertNotNull(firstPageWidgets);
+        Assertions.assertEquals(1, firstPageWidgets.getWidgets().size());
+        assertWidget(widget1, firstPageWidgets.getWidgets().get(0));
+        Assertions.assertTrue(firstPageWidgets.getPaging().getHasMore());
+
+        ResponseEntity<WidgetsListView> secondPageResponse = testRestTemplate.getForEntity(
+            "/api/widgets?limit={limit}&cursor={cursor}&x={x}&y={y}&width={width}&height={height}",
+            WidgetsListView.class,
+            1,
+            firstPageWidgets.getPaging().getCursor()
+                .orElseGet(() -> Assertions.fail("Cursor expected from the first page")),
+            0,
+            0,
+            100,
+            150
+        );
+        Assertions.assertEquals(HttpStatus.OK, secondPageResponse.getStatusCode());
+        WidgetsListView secondPageWidgets = secondPageResponse.getBody();
+        Assertions.assertNotNull(secondPageWidgets);
+        Assertions.assertEquals(1, secondPageWidgets.getWidgets().size());
+        assertWidget(widget2, secondPageWidgets.getWidgets().get(0));
+        Assertions.assertFalse(secondPageWidgets.getPaging().getHasMore());
+    }
+
     private static void assertWidget(WidgetView expected, WidgetView actual) {
         Assertions.assertAll(
             () -> Assertions.assertEquals(expected.getId(), actual.getId()),

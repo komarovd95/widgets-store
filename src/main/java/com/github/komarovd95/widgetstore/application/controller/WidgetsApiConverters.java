@@ -3,6 +3,7 @@ package com.github.komarovd95.widgetstore.application.controller;
 import com.github.komarovd95.widgetstore.api.*;
 import com.github.komarovd95.widgetstore.api.common.Point2D;
 import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
+import com.github.komarovd95.widgetstore.application.domain.Region;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
 import com.github.komarovd95.widgetstore.application.storage.StoreWidgetParameters;
 
@@ -22,11 +23,15 @@ public final class WidgetsApiConverters {
      */
     public static StoreWidgetParameters toParameters(CreateWidgetRequest request) {
         return StoreWidgetParameters.builder()
-            .setX(request.getCoordinates().getX())
-            .setY(request.getCoordinates().getY())
+            .setBoundaries(
+                Region.builder()
+                    .setX(request.getCoordinates().getX())
+                    .setY(request.getCoordinates().getY())
+                    .setWidth(request.getDimensions().getWidth())
+                    .setHeight(request.getDimensions().getHeight())
+                    .builder()
+            )
             .setZ(request.getzIndex().orElse(null))
-            .setWidth(request.getDimensions().getWidth())
-            .setHeight(request.getDimensions().getHeight())
             .build();
     }
 
@@ -38,11 +43,15 @@ public final class WidgetsApiConverters {
      */
     public static StoreWidgetParameters toParameters(UpdateWidgetRequest request) {
         return StoreWidgetParameters.builder()
-            .setX(request.getCoordinates().getX())
-            .setY(request.getCoordinates().getY())
+            .setBoundaries(
+                Region.builder()
+                    .setX(request.getCoordinates().getX())
+                    .setY(request.getCoordinates().getY())
+                    .setWidth(request.getDimensions().getWidth())
+                    .setHeight(request.getDimensions().getHeight())
+                    .builder()
+            )
             .setZ(request.getzIndex().orElse(null))
-            .setWidth(request.getDimensions().getWidth())
-            .setHeight(request.getDimensions().getHeight())
             .build();
     }
 
@@ -57,15 +66,15 @@ public final class WidgetsApiConverters {
             .setId(widget.getId())
             .setCoordinates(
                 Point2D.builder()
-                    .setX(widget.getX())
-                    .setY(widget.getY())
+                    .setX(widget.getBoundaries().getX())
+                    .setY(widget.getBoundaries().getY())
                     .build()
             )
             .setZIndex(widget.getZ())
             .setDimensions(
                 WidgetDimensions.builder()
-                    .setWidth(widget.getWidth())
-                    .setHeight(widget.getHeight())
+                    .setWidth(widget.getBoundaries().getWidth())
+                    .setHeight(widget.getBoundaries().getHeight())
                     .build()
             )
             .setModifiedAt(widget.getModifiedAt())

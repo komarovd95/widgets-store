@@ -6,6 +6,7 @@ import com.github.komarovd95.widgetstore.api.WidgetView;
 import com.github.komarovd95.widgetstore.api.WidgetsListView;
 import com.github.komarovd95.widgetstore.api.common.Paging;
 import com.github.komarovd95.widgetstore.application.domain.PagedList;
+import com.github.komarovd95.widgetstore.application.domain.Region;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
 import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
 import com.github.komarovd95.widgetstore.application.storage.WidgetsStorage;
@@ -158,6 +159,16 @@ public class WidgetsController {
         )
     )
     public ResponseEntity<WidgetsListView> getWidgets(
+        @RequestParam(name = "x", required = false)
+        Integer x,
+        @RequestParam(name = "y", required = false)
+        Integer y,
+        @RequestParam(name = "width", required = false)
+        @Positive
+        Integer width,
+        @RequestParam(name = "height", required = false)
+        @Positive
+        Integer height,
         @RequestParam(name = "limit", defaultValue = DEFAULT_LIMIT, required = false)
         @Parameter(
             description = "A maximum number of widgets that will be returned on the page",
@@ -165,14 +176,24 @@ public class WidgetsController {
         )
         @Positive
         @Max(MAX_LIMIT)
-            Integer limit,
+        Integer limit,
         @RequestParam(name = "cursor", required = false)
         @Parameter(description = "A cursor of the page. If not presented, then the first page will be returned")
-            String cursor
+        String cursor
     ) {
         PagedList<Widget> pageWidgets = widgetsStorage.getWidgets(
             new WidgetsFilter(
-                cursor != null ? Integer.parseInt(cursor) : null,
+                x != null && y != null && width != null && height != null
+                    ? Region.builder()
+                        .setX(x)
+                        .setY(y)
+                        .setWidth(width)
+                        .setHeight(height)
+                        .builder()
+                    : null,
+                cursor != null
+                    ? Integer.parseInt(cursor)
+                    : null,
                 limit
             )
         );

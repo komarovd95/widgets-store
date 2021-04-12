@@ -14,14 +14,9 @@ public class Widget {
     private final String id;
 
     /**
-     * An X coordinate.
+     * A widget's boundaries.
      */
-    private final int x;
-
-    /**
-     * An Y coordinate.
-     */
-    private final int y;
+    private final Region boundaries;
 
     /**
      * A Z-index.
@@ -29,27 +24,14 @@ public class Widget {
     private final int z;
 
     /**
-     * A widget's width.
-     */
-    private final int width;
-
-    /**
-     * A widget's height.
-     */
-    private final int height;
-
-    /**
      * A timestamp of the last modification.
      */
     private final Instant modifiedAt;
 
-    private Widget(String id, int x, int y, int z, int width, int height, Instant modifiedAt) {
+    private Widget(String id, Region boundaries, int z, Instant modifiedAt) {
         this.id = Objects.requireNonNull(id, "id");
-        this.x = x;
-        this.y = y;
+        this.boundaries = Objects.requireNonNull(boundaries, "boundaries");
         this.z = z;
-        this.width = width;
-        this.height = height;
         this.modifiedAt = Objects.requireNonNull(modifiedAt, "modifiedAt");
     }
 
@@ -61,17 +43,10 @@ public class Widget {
     }
 
     /**
-     * @return the X coordinate, not null
+     * @return the widget's boundaries, not null
      */
-    public int getX() {
-        return x;
-    }
-
-    /**
-     * @return the Y coordinate, not null
-     */
-    public int getY() {
-        return y;
+    public Region getBoundaries() {
+        return boundaries;
     }
 
     /**
@@ -79,20 +54,6 @@ public class Widget {
      */
     public int getZ() {
         return z;
-    }
-
-    /**
-     * @return the width, not null
-     */
-    public int getWidth() {
-        return width;
-    }
-
-    /**
-     * @return the height, not null
-     */
-    public int getHeight() {
-        return height;
     }
 
     /**
@@ -106,11 +67,8 @@ public class Widget {
     public String toString() {
         return "Widget{" +
             "id='" + id + '\'' +
-            ", x=" + x +
-            ", y=" + y +
+            ", boundaries=" + boundaries +
             ", z=" + z +
-            ", width=" + width +
-            ", height=" + height +
             ", modifiedAt=" + modifiedAt +
             '}';
     }
@@ -134,11 +92,8 @@ public class Widget {
         Objects.requireNonNull(copy, "copy");
         return new Builder()
             .setId(copy.id)
-            .setX(copy.x)
-            .setY(copy.y)
+            .setBoundaries(copy.boundaries)
             .setZ(copy.z)
-            .setWidth(copy.width)
-            .setHeight(copy.height)
             .setModifiedAt(copy.modifiedAt);
     }
 
@@ -148,11 +103,8 @@ public class Widget {
     public static class Builder {
 
         private String id;
-        private Integer x;
-        private Integer y;
+        private Region boundaries;
         private Integer z;
-        private Integer width;
-        private Integer height;
         private Instant modifiedAt;
 
         private Builder() {
@@ -163,28 +115,13 @@ public class Widget {
             return this;
         }
 
-        public Builder setX(int x) {
-            this.x = x;
-            return this;
-        }
-
-        public Builder setY(int y) {
-            this.y = y;
+        public Builder setBoundaries(Region boundaries) {
+            this.boundaries = boundaries;
             return this;
         }
 
         public Builder setZ(int z) {
             this.z = z;
-            return this;
-        }
-
-        public Builder setWidth(int width) {
-            this.width = width;
-            return this;
-        }
-
-        public Builder setHeight(int height) {
-            this.height = height;
             return this;
         }
 
@@ -196,11 +133,8 @@ public class Widget {
         public Widget build() {
             return new Widget(
                 id,
-                x,
-                y,
+                boundaries,
                 z,
-                width,
-                height,
                 modifiedAt
             );
         }
