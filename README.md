@@ -29,6 +29,8 @@ By default, it uses `in-memory` storage (set in `application.properties`).
 ### REST API
 The API of the application is designed with REST style in mind.
 
+For validation, it uses JST-303.
+
 It has an Open API documentation provided via SpringDoc and Swagger UI. The documentation is available at
 `http://localhost:8080/v3/api-docs`.
 
