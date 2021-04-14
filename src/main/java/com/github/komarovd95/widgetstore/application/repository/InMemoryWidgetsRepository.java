@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 /**
  * The in-memory implementation of the {@link WidgetsRepository}.
  * <p>
+ * This class is not thread-safe.
+ * <p>
  * It uses a {@link TreeMap} (widgets sorted by Z-index) for efficient widgets list queries and overlying widgets
  * shifting while inserts and updates. Also, this map is used for maintaining of Z-indices uniqueness.
  * <p>
@@ -111,8 +113,7 @@ public class InMemoryWidgetsRepository implements WidgetsRepository {
                 break;
             }
             // it's a hacky solution to mutate keys of the map.
-            // But we can reduce complexity of shifting the overlying widgets from O(n * log n) to O(n)
-            // in the worst case
+            // But we can reduce complexity of shifting the overlying widgets from O(n * log n) to O(n) in the worst case
             int shiftedZIndex = ++entryKey.z;
             widget.z = shiftedZIndex;
             widget.modifiedAt = modificationTimestamp;
@@ -212,10 +213,10 @@ public class InMemoryWidgetsRepository implements WidgetsRepository {
     /**
      * A mutable widget representation.
      * <p>
-     * This class is used internally only.
+     * This class is for internal usage only.
      * <p>
      * Mutability helps us to reduce the number of memory allocations. Also, with mutable class we don't need to call
-     * methods like {@link Map#replace(Object, Object)} while updating widgets.
+     * methods like {@link Map#replace(Object, Object)} when updating widgets.
      */
     private static class MutableWidget {
 

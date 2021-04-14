@@ -4,6 +4,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
+/**
+ * A Clock that always returns a unique timestamp.
+ * <p>
+ * This class is not thread-safe.
+ */
 public class UniqueClock extends Clock {
 
     private final Instant timestamp = Instant.now();

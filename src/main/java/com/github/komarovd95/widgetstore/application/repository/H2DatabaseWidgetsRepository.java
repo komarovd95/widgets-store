@@ -19,6 +19,8 @@ import java.util.StringJoiner;
 /**
  * The implementation of the {@link WidgetsRepository} backed by H2 Database.
  * <p>
+ * This class is not thread-safe.
+ * <p>
  * For search queries and overlying widgets shifting, the implementation relies on B-tree indexes
  * (columns {@code widget_id} and {@code z_index}).
  * <p>
