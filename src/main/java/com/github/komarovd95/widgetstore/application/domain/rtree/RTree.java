@@ -1,4 +1,4 @@
-package com.github.komarovd95.widgetstore.application.storage.inmemory.rtree;
+package com.github.komarovd95.widgetstore.application.domain.rtree;
 
 import java.util.HashMap;
 import java.util.HashSet;

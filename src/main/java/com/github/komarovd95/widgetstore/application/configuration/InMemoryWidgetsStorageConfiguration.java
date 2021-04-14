@@ -1,14 +1,15 @@
 package com.github.komarovd95.widgetstore.application.configuration;
 
-import com.github.komarovd95.widgetstore.application.service.generator.WidgetIdGenerator;
-import com.github.komarovd95.widgetstore.application.storage.WidgetsStorage;
-import com.github.komarovd95.widgetstore.application.storage.inmemory.InMemoryWidgetsStorage;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.github.komarovd95.widgetstore.application.repository.InMemoryWidgetsRepository;
+import com.github.komarovd95.widgetstore.application.repository.WidgetsRepository;
+import com.github.komarovd95.widgetstore.application.service.transaction.InMemoryTransactionsService;
+import com.github.komarovd95.widgetstore.application.service.transaction.TransactionsService;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
-import java.time.Clock;
 
 /**
  * The configuration for in-memory widgets storage.
@@ -17,19 +18,19 @@ import java.time.Clock;
  */
 @Configuration
 @Profile("in-memory")
-@EnableConfigurationProperties(InMemoryWidgetsStorageProperties.class)
+@EnableAutoConfiguration(exclude = {
+    DataSourceAutoConfiguration.class,
+    DataSourceTransactionManagerAutoConfiguration.class
+})
 public class InMemoryWidgetsStorageConfiguration {
 
     @Bean
-    public WidgetsStorage inMemoryWidgetsStorage(
-        WidgetIdGenerator widgetIdGenerator,
-        Clock clock,
-        InMemoryWidgetsStorageProperties inMemoryWidgetsStorageProperties
-    ) {
-        return new InMemoryWidgetsStorage(
-            widgetIdGenerator,
-            clock,
-            inMemoryWidgetsStorageProperties.getLockAcquisitionTimeout()
-        );
+    public TransactionsService inMemoryTransactionsService() {
+        return new InMemoryTransactionsService();
+    }
+
+    @Bean
+    public WidgetsRepository inMemoryWidgetsRepository() {
+        return new InMemoryWidgetsRepository();
     }
 }

@@ -62,7 +62,8 @@ public class WidgetView {
     /**
      * @return the Z-index, not null
      */
-    public Integer getzIndex() {
+    @JsonProperty("zIndex")
+    public Integer getZIndex() {
         return zIndex;
     }
 

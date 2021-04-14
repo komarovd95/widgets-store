@@ -9,7 +9,7 @@ import com.github.komarovd95.widgetstore.application.domain.PagedList;
 import com.github.komarovd95.widgetstore.application.domain.Region;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
 import com.github.komarovd95.widgetstore.application.domain.WidgetsFilter;
-import com.github.komarovd95.widgetstore.application.storage.WidgetsStorage;
+import com.github.komarovd95.widgetstore.application.service.WidgetsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,7 +19,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -35,11 +43,11 @@ public class WidgetsController {
     private static final String DEFAULT_LIMIT = "10";
     private static final int MAX_LIMIT = 500;
 
-    private final WidgetsStorage widgetsStorage;
+    private final WidgetsService widgetsService;
 
     @Autowired
-    public WidgetsController(WidgetsStorage widgetsStorage) {
-        this.widgetsStorage = widgetsStorage;
+    public WidgetsController(WidgetsService widgetsService) {
+        this.widgetsService = widgetsService;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -61,7 +69,7 @@ public class WidgetsController {
         }
     )
     public ResponseEntity<WidgetView> createWidget(@Valid @RequestBody CreateWidgetRequest request) {
-        Widget widget = widgetsStorage.createWidget(WidgetsApiConverters.toParameters(request));
+        Widget widget = widgetsService.createWidget(WidgetsApiConverters.toParameters(request));
         return ResponseEntity.ok(WidgetsApiConverters.toApiView(widget));
     }
 
@@ -96,7 +104,7 @@ public class WidgetsController {
         @PathVariable("widgetId") String widgetId,
         @Valid @RequestBody UpdateWidgetRequest request
     ) {
-        Optional<Widget> optionalWidget = widgetsStorage.updateWidget(
+        Optional<Widget> optionalWidget = widgetsService.updateWidget(
             widgetId,
             WidgetsApiConverters.toParameters(request)
         );
@@ -116,7 +124,7 @@ public class WidgetsController {
         )
     )
     public ResponseEntity<Void> deleteWidget(@PathVariable("widgetId") String widgetId) {
-        widgetsStorage.deleteWidget(widgetId);
+        widgetsService.deleteWidget(widgetId);
         return ResponseEntity.noContent().build();
     }
 
@@ -140,7 +148,7 @@ public class WidgetsController {
         }
     )
     public ResponseEntity<WidgetView> getWidgetById(@PathVariable("widgetId") String widgetId) {
-        Optional<Widget> optionalWidget = widgetsStorage.getWidgetById(widgetId);
+        Optional<Widget> optionalWidget = widgetsService.getWidgetById(widgetId);
         return optionalWidget
             .map(widget -> ResponseEntity.ok(WidgetsApiConverters.toApiView(widget)))
             .orElseGet(() -> ResponseEntity.notFound().build());
@@ -181,7 +189,7 @@ public class WidgetsController {
         @Parameter(description = "A cursor of the page. If not presented, then the first page will be returned")
         String cursor
     ) {
-        PagedList<Widget> pageWidgets = widgetsStorage.getWidgets(
+        PagedList<Widget> pageWidgets = widgetsService.getWidgets(
             new WidgetsFilter(
                 x != null && y != null && width != null && height != null
                     ? Region.builder()

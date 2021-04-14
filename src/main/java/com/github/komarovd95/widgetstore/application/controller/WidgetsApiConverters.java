@@ -1,11 +1,13 @@
 package com.github.komarovd95.widgetstore.application.controller;
 
-import com.github.komarovd95.widgetstore.api.*;
+import com.github.komarovd95.widgetstore.api.CreateWidgetRequest;
+import com.github.komarovd95.widgetstore.api.UpdateWidgetRequest;
+import com.github.komarovd95.widgetstore.api.WidgetView;
 import com.github.komarovd95.widgetstore.api.common.Point2D;
 import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
 import com.github.komarovd95.widgetstore.application.domain.Region;
 import com.github.komarovd95.widgetstore.application.domain.Widget;
-import com.github.komarovd95.widgetstore.application.storage.StoreWidgetParameters;
+import com.github.komarovd95.widgetstore.application.domain.StoreWidgetParameters;
 
 /**
  * The class with helper methods for the DTOs conversion.

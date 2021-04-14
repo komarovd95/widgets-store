@@ -1,6 +1,4 @@
-package com.github.komarovd95.widgetstore.application.storage;
-
-import com.github.komarovd95.widgetstore.application.domain.Region;
+package com.github.komarovd95.widgetstore.application.domain;
 
 import java.util.Objects;
 import java.util.Optional;

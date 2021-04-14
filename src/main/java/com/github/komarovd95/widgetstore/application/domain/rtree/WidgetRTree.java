@@ -1,8 +1,8 @@
-package com.github.komarovd95.widgetstore.application.storage.inmemory.rtree;
+package com.github.komarovd95.widgetstore.application.domain.rtree;
 
 import com.github.komarovd95.widgetstore.application.domain.Region;
 
-import java.util.*;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**

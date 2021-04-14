@@ -1,6 +1,5 @@
-package com.github.komarovd95.widgetstore.application;
+package com.github.komarovd95.widgetstore.api;
 
-import com.github.komarovd95.widgetstore.api.*;
 import com.github.komarovd95.widgetstore.api.common.Point2D;
 import com.github.komarovd95.widgetstore.api.common.WidgetDimensions;
 import org.junit.jupiter.api.Assertions;
@@ -8,22 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.stream.Stream;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("in-memory")
-public class InMemoryWidgetsStorageSpringTest {
+public abstract class AbstractWidgetsStorageApiTest {
 
-    @Autowired
-    private TestRestTemplate testRestTemplate;
+    private final TestRestTemplate testRestTemplate;
+
+    protected AbstractWidgetsStorageApiTest(TestRestTemplate testRestTemplate) {
+        this.testRestTemplate = testRestTemplate;
+    }
 
     @Test
     public void should_return_200_OK_and_create_a_new_widget_when_request_is_valid() {
@@ -283,9 +280,10 @@ public class InMemoryWidgetsStorageSpringTest {
         Assertions.assertNotNull(widget3);
 
         ResponseEntity<WidgetsListView> firstPageResponse = testRestTemplate.getForEntity(
-            "/api/widgets?limit={limit}",
+            "/api/widgets?limit={limit}&cursor={cursor}",
             WidgetsListView.class,
-            2
+            2,
+            widget1.getZIndex() - 1
         );
         Assertions.assertEquals(HttpStatus.OK, firstPageResponse.getStatusCode());
         WidgetsListView firstPageWidgets = firstPageResponse.getBody();
@@ -370,9 +368,10 @@ public class InMemoryWidgetsStorageSpringTest {
         Assertions.assertNotNull(widget3);
 
         ResponseEntity<WidgetsListView> firstPageResponse = testRestTemplate.getForEntity(
-            "/api/widgets?limit={limit}&x={x}&y={y}&width={width}&height={height}",
+            "/api/widgets?limit={limit}&cursor={cursor}&x={x}&y={y}&width={width}&height={height}",
             WidgetsListView.class,
             1,
+            widget1.getZIndex() - 1,
             0,
             0,
             100,
@@ -409,7 +408,7 @@ public class InMemoryWidgetsStorageSpringTest {
             () -> Assertions.assertEquals(expected.getId(), actual.getId()),
             () -> Assertions.assertEquals(expected.getCoordinates().getX(), actual.getCoordinates().getX()),
             () -> Assertions.assertEquals(expected.getCoordinates().getY(), actual.getCoordinates().getY()),
-            () -> Assertions.assertEquals(expected.getzIndex(), actual.getzIndex()),
+            () -> Assertions.assertEquals(expected.getZIndex(), actual.getZIndex()),
             () -> Assertions.assertEquals(expected.getDimensions().getWidth(), actual.getDimensions().getWidth()),
             () -> Assertions.assertEquals(expected.getDimensions().getHeight(), actual.getDimensions().getHeight()),
             () -> Assertions.assertEquals(
